@@ -1,5 +1,7 @@
 package dev.fermatsolutions.plugins
 
+import dev.fermatsolutions.model.TaskRepository
+import dev.fermatsolutions.model.tasksAsTable
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.http.content.*
@@ -28,6 +30,14 @@ fun Application.configureRouting() {
 
         get("/error-test") {
             throw IllegalStateException("Too Busy")
+        }
+
+        get("/tasks") {
+            val tasks = TaskRepository.allTasks()
+            call.respondText(
+                contentType = ContentType.parse("text/html"),
+                text = tasks.tasksAsTable()
+            )
         }
     }
 }
