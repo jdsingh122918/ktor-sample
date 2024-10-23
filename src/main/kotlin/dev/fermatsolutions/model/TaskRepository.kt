@@ -12,7 +12,7 @@ object TaskRepository {
         it.priority == priority
     }
 
-    fun taskByName(name: String) = tasks.find {
+    private fun taskByName(name: String) = tasks.find {
         it.name.equals(name, ignoreCase = true)
     }
 
@@ -21,5 +21,9 @@ object TaskRepository {
             throw IllegalStateException("Cannot duplicate task names!")
         }
         tasks.add(task)
+    }
+
+    fun deleteTask(name: String): Boolean {
+        return tasks.removeIf { it.name.equals(name, ignoreCase = true) }
     }
 }

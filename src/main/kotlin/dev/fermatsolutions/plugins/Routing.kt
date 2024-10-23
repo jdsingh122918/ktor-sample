@@ -37,10 +37,7 @@ fun Application.configureRouting() {
 
         get("/tasks") {
             val tasks = TaskRepository.allTasks()
-            call.respondText(
-                contentType = ContentType.parse("text/html"),
-                text = tasks.tasksAsTable()
-            )
+            call.respond(tasks)
         }
 
         get("/tasks/byPriority/{priority}") {
@@ -69,28 +66,28 @@ fun Application.configureRouting() {
         }
 
         post("/tasks") {
-            val formContent = call.receiveParameters()
-            val params = Triple(
-                formContent["name"] ?: "",
-                formContent["description"] ?: "",
-                formContent["priority"] ?: ""
-            )
-
-            if (params.toList().any() { it.isEmpty() }) {
-                call.respond(HttpStatusCode.BadRequest)
-                return@post
-            }
-
             try {
-                val priority = Priority.valueOf(params.third)
-                TaskRepository.addTask(
-                    Task(params.first, params.second, priority)
-                )
+                val task = call.receive<Task>()
+                TaskRepository.addTask(task)
                 call.respond(HttpStatusCode.NoContent)
             } catch (ex: IllegalArgumentException) {
                 call.respond(HttpStatusCode.BadRequest)
             } catch (ex: IllegalStateException) {
                 call.respond(HttpStatusCode.BadRequest)
+            }
+        }
+
+        delete("/tasks/{taskName}") {
+            val taskName = call.parameters["taskName"]
+            if (taskName == null) {
+                call.respond(HttpStatusCode.BadRequest)
+                return@delete
+            }
+
+            if (TaskRepository.deleteTask(taskName)) {
+                call.respond(HttpStatusCode.NoContent)
+            } else {
+                call.respond(HttpStatusCode.NotFound)
             }
         }
     }
